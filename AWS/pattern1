@@ -1,0 +1,9 @@
+#!/bin/bash
+
+ImageId=ami-841f46ff
+InstanceType=t2.micro
+SecurityGroupIds=sg-0d34727d
+Region=us-east-1
+SSH_ID=ubuntu
+ChefRunList=recipe[learn_chef_apache2]
+

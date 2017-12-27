@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# $1 is the Cloud Provider. Currently only AWS
+# $2 is the pattern name. Currently only pattern1
+# $3 is the node name. 
+
+if [ -z $3 ]
+then
+  echo "Error: Must specify the provider, the pattern and the node name"
+  exit 1
+fi
+
+echo "Running for Provider [$1] with Pattern [$2] to be named [$3]"
+
+
+if [ -z $KEY_NAME ]
+then
+  echo "Error: The KEY_NAME environmental variable is not set."
+  exit 1
+fi
+
+echo "Using Key [$KEY_NAME]"
+
+if [ -z $INFRA_MAN_HOME ]
+then
+  INFRA_MAN_HOME=~/dev/InfraMan
+fi
+
+source $INFRA_MAN_HOME/$1/$2
+
+RES_ID=`aws ec2 run-instances --region $Region --image-id $ImageId --instance-type $InstanceType --security-group-ids $SecurityGroupIds --count 1 --key-name $KEY_NAME --output text | head -n 1 | awk '{print $2}'` 
+
+echo "Launched instance with ReservationID: $RES_ID"
+echo "Checking for an IP address"
+
+x=10
+while [ $x -gt 0 ]
+do
+  TargetMachineIP=`source $INFRA_MAN_HOME/$1/getPublicIPFromReservationID $RES_ID $Region`
+  if [ -z "$TargetMachineIP" ]
+  then
+    echo "No IP available yet. Waiting to retry"
+    sleep 5s
+  else
+    echo "IP address: $TargetMachineIP"
+    x=0
+  fi
+
+  x=$(( $x - 1 ))
+done
+
+
+if [ $x -eq 0 ]
+then
+  echo "An IP address was not found"
+  exit 1
+fi
+
+echo "Checking that SSH is available"
+y=10
+while [ $y -gt 0 ]
+  do
+  SSH_STATUS=`nmap $TargetMachineIP -PN -p ssh | grep open`
+
+  if [ -z "$SSH_STATUS" ]
+  then
+    echo "SSH is not available yet. Waiting to retry."
+    sleep 30s
+  else
+    echo "SSH is available"
+    TargetMachineInstanceID=`source $INFRA_MAN_HOME/$1/getInstanceIDFromReservationID $RES_ID $Region`
+    if [ -z "$TargetMachineInstanceID" ]
+    then
+      echo "Unable to get InstanceID, no tag created"
+      exit 1
+    fi
+
+    aws ec2 create-tags --region us-east-1 --resources $TargetMachineInstanceID --tags Key=Name,Value=$3
+    echo "Instance [$TargetMachineInstanceID] tagged as [$3]"
+    y=0
+  fi
+    
+  y=$(( $y - 1 ))
+done
+  
+if [ $y -eq 0 ]
+then
+  echo "SSH is not available for this machine. Ending"
+  exit 1
+fi
+
+echo "Bootstrapping chef"
+knife bootstrap $TargetMachineIP --ssh-user $SSH_ID --sudo --identity-file ~/.ssh/$KEY_NAME.pem  --node-name $3 --run-list $ChefRunList
+
+exit 0

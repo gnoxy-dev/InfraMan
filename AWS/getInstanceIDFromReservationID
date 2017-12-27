@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# $1 is the ReservationId
+# $2 is the Region
+
+aws ec2 describe-instances --region $2 --query "Reservations[?ReservationId=='$1'].Instances[*].InstanceId" --output text

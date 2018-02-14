@@ -1,2 +1,0 @@
-# InfraMan
-Infrastructure Management scripts

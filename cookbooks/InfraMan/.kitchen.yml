@@ -1,6 +1,17 @@
 ---
 driver:
-  name: vagrant
+  name: ec2
+  aws_ssh_key_id: aws-sysadmin-keypair
+  region: us-east-1
+  availability_zone: b
+  subnet_id: subnet-ce96a687
+  instance_type: t1.micro
+  image_id: ami-841f46ff
+  security_group_ids: ["sg-17813260"]
+  retryable_tries: 120
+
+transport:
+  ssh_key: ~/.ssh/aws-sysadmin-keypair.pem
 
 provisioner:
   name: chef_zero
@@ -13,8 +24,8 @@ verifier:
   name: inspec
 
 platforms:
-  - name: ubuntu-16.04
-  - name: centos-7
+  - name: ubuntu-14.04
+#  - name: centos-7
 
 suites:
   - name: default
@@ -23,4 +34,4 @@ suites:
     verifier:
       inspec_tests:
         - test/smoke/default
-attributes:
+    attributes:

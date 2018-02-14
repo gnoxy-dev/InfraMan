@@ -1,6 +1,6 @@
 name 'InfraMan'
-maintainer 'The Authors'
-maintainer_email 'you@example.com'
+maintainer 'gnoxy'
+maintainer_email 'dev@gnoxy.com'
 license ''
 description 'Installs/Configures InfraMan'
 long_description 'Installs/Configures InfraMan'
@@ -18,3 +18,7 @@ chef_version '>= 12.1' if respond_to?(:chef_version)
 # a Supermarket.
 #
 # source_url 'https://github.com/<insert_org_here>/InfraMan'
+supports 'ubuntu'
+
+depends 'java', '~> 1.50.0'
+depends 'chef-apt-docker', '~> 2.0.4'

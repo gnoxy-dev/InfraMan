@@ -1,9 +1,10 @@
 #!/bin/bash
 
+# Ubuntu 14.04
 ImageId=ami-841f46ff
 InstanceType=t2.micro
-SecurityGroupIds=sg-0d34727d
+SecurityGroupIds=sg-17813260
 Region=us-east-1
 SSH_ID=ubuntu
-ChefRunList=recipe[learn_chef_apache2]
+ChefRunList=recipe[hostname::default]
 
